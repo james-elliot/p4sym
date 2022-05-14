@@ -2,8 +2,16 @@
 
 This program is quite "state of the art" regarding the use of symmetries 
 and hash tables. 
+
 It can solve the connect-4 game up to 7x7 given enough memory for the hash tables.
 This Rust version is as fast as the C version I wrote for my students at ISAE/Sup aéro.
+
+Solving the "classical" 7x6 game takes around 20 minutes on an i9-9900K, the 7x7 grid takes around 40 hours.
+Parallelism is not used.
+
+The program works only in "release" mode (cargo run --release)
+
+Results and timings are presented below.
 
 
 | X | Y |Result|Time|
