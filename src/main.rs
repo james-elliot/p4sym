@@ -381,9 +381,9 @@ fn ab(
                 tab,
                 first,
                 nodes,
-                nhv ^ turn_hash,
-                nhv2 ^ turn_hash,
-                //		       nhv,nhv2,
+		// turn_hash is useless in connect4
+                nhv ^ turn_hash,nhv2 ^ turn_hash,
+//                nhv,nhv2,
                 turn_hash,
                 first_hash,
                 hashesw,
