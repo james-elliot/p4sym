@@ -4,7 +4,7 @@ type Colors = i8;
 type Sigs = u64;
 
 const SIZEX: usize = 6;
-const SIZEY: usize = 6;
+const SIZEY: usize = 7;
 
 const FOUR: usize = 4;
 
@@ -14,10 +14,10 @@ const EMPTY: Colors = 0;
 const WHITE: Colors = 1;
 const BLACK: Colors = -WHITE;
 
-type HVals = [[Sigs; SIZEY]; SIZEX];
+//type HVals = [[Sigs; SIZEY]; SIZEX];
 type Board = [[Colors; SIZEY]; SIZEX];
 
-const NB_BITS: u8 = 27;
+const NB_BITS: u8 = 30;
 const HASH_SIZE: usize = 1 << NB_BITS;
 const HASH_MASK: Sigs = (1 << NB_BITS) - 1;
 #[repr(packed)]
@@ -34,96 +34,16 @@ const ZHASH: HashElem = HashElem {
     v_sup: 0,
     d: 0,
 };
-type HTable = Box<[HashElem; HASH_SIZE]>;
+//type HTable2 = Box<[HashElem; HASH_SIZE]>;
+type HTable = Vec<HashElem>;
 
 #[allow(dead_code)]
-fn eval3(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
-    // Below
-    let mut nb = 1;
-    if y >= 3 {
-        for d in 1..FOUR {
-            if tab[x][y - d] == color {
-                nb = nb + 1;
-            } else {
-                break;
-            }
-        }
-        if nb >= FOUR {
-            return color as Vals;
-        }
-    }
-
-    // Horizontal
-    nb = 1;
-    for d in 1..min(FOUR, SIZEX - x) {
-        if tab[x + d][y] == color {
-            nb = nb + 1;
-        } else {
-            break;
-        }
-    }
-    for d in 1..min(FOUR, x + 1) {
-        if tab[x - d][y] == color {
-            nb = nb + 1;
-        } else {
-            break;
-        }
-    }
-    if nb >= FOUR {
-        return color as Vals;
-    }
-
-    // Diag 1
-    nb = 1;
-    for d in 1..min(FOUR, min(SIZEX - x, SIZEY - y)) {
-        if tab[x + d][y + d] == color {
-            nb = nb + 1;
-        } else {
-            break;
-        }
-    }
-    for d in 1..min(FOUR, min(x + 1, y + 1)) {
-        if tab[x - d][y - d] == color {
-            nb = nb + 1;
-        } else {
-            break;
-        }
-    }
-    if nb >= FOUR {
-        return color as Vals;
-    }
-
-    // Diag 2
-    nb = 1;
-    for d in 1..min(FOUR, min(SIZEX - x, y + 1)) {
-        if tab[x + d][y - d] == color {
-            nb = nb + 1;
-        } else {
-            break;
-        }
-    }
-    for d in 1..min(4, min(x + 1, SIZEY - y)) {
-        if tab[x - d][y + d] == color {
-            nb = nb + 1;
-        } else {
-            break;
-        }
-    }
-    if nb >= FOUR {
-        return color as Vals;
-    }
-
-    return 0;
-}
-
-// eval2 is slightly faster
-#[allow(dead_code)]
-fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
+fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> bool {
     /* Vertical */
     if y >= FOUR - 1 {
         let mut d = 0;
         let nb = loop {
-            d = d + 1;
+            d += 1;
             let j = y - d;
             if tab[x][j] != color {
                 break d - 1;
@@ -133,7 +53,7 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
             }
         };
         if nb >= FOUR - 1 {
-            return color as Vals;
+	    return true;
         }
     }
 
@@ -143,7 +63,7 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
         if x < SIZEX - 1 {
             let mut d = 0;
             let res = loop {
-                d = d + 1;
+                d += 1;
                 let i = x + d;
                 if tab[i][y] != color {
                     break d - 1;
@@ -152,12 +72,12 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
                     break d;
                 }
             };
-            nb = nb + res;
+            nb += res;
         }
         if x > 0 {
             let mut d = 0;
             let res = loop {
-                d = d + 1;
+                d += 1;
                 let i = x - d;
                 if tab[i][y] != color {
                     break d - 1;
@@ -166,10 +86,10 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
                     break d;
                 }
             };
-            nb = nb + res;
+            nb += res;
         }
         if nb >= FOUR - 1 {
-            return color as Vals;
+	    return true;
         }
     }
 
@@ -179,7 +99,7 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
         if (x > 0) && (y > 0) {
             let mut d = 0;
             let res = loop {
-                d = d + 1;
+                d += 1;
                 let i = x - d;
                 let j = y - d;
                 if tab[i][j] != color {
@@ -189,12 +109,12 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
                     break d;
                 }
             };
-            nb = nb + res;
+            nb += res;
         }
         if (x < SIZEX - 1) && (y < SIZEY - 1) {
             let mut d = 0;
             let res = loop {
-                d = d + 1;
+                d += 1;
                 let i = x + d;
                 let j = y + d;
                 if tab[i][j] != color {
@@ -204,10 +124,10 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
                     break d;
                 }
             };
-            nb = nb + res;
+            nb += res;
         }
         if nb >= FOUR - 1 {
-            return color as Vals;
+	    return true;
         }
     }
 
@@ -217,7 +137,7 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
         if (x > 0) && (y < SIZEY - 1) {
             let mut d = 0;
             let res = loop {
-                d = d + 1;
+                d += 1;
                 let i = x - d;
                 let j = y + d;
                 if tab[i][j] != color {
@@ -227,12 +147,12 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
                     break d;
                 }
             };
-            nb = nb + res;
+            nb += res;
         }
         if (x < SIZEX - 1) && (y > 0) {
             let mut d = 0;
             let res = loop {
-                d = d + 1;
+                d += 1;
                 let i = x + d;
                 let j = y - d;
                 if tab[i][j] != color {
@@ -242,38 +162,366 @@ fn eval2(x: usize, y: usize, color: Colors, tab: &Board) -> Vals {
                     break d;
                 }
             };
-            nb = nb + res;
+            nb += res;
         }
         if nb >= FOUR - 1 {
-            return color as Vals;
+	    return true;
         }
     }
-    return 0;
+    false
 }
 
-fn build_hashes() -> (Sigs, Sigs, HVals, HVals) {
-    use rand::{thread_rng, Rng};
-    let mut rng = thread_rng();
-    let mut hashesw = [[0; SIZEY]; SIZEX];
-    let mut hashesb = [[0; SIZEY]; SIZEX];
-    let turn_hash = rng.gen();
-    let first_hash = rng.gen();
-    for i in 0..SIZEX {
-        for j in 0..SIZEY {
-            hashesw[i][j] = rng.gen();
-            hashesb[i][j] = rng.gen();
-        }
+#[allow(dead_code)]
+fn eval4(x: usize, y: usize, color: Colors, tab: &Board) -> bool {
+    unsafe{
+	/* Vertical */
+	if y >= FOUR - 1 {
+            let mut d = 0;
+            let nb = loop {
+		d += 1;
+		let j = y - d;
+		if *tab.get_unchecked(x).get_unchecked(j) != color {break d - 1;}
+		if (j == 0) || (d == FOUR - 1) {break d;}
+            };
+            if nb >= FOUR - 1 {return true;}
+	}
+	
+	/* Horizontal */
+	{
+            let mut nb = 0;
+            if x < SIZEX - 1 {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x + d;
+                    if *tab.get_unchecked(i).get_unchecked(y) != color {break d - 1;}
+                    if (i == SIZEX - 1) || (d == FOUR - 1) {break d;}
+		};
+		nb += res;
+            }
+            if x > 0 {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x - d;
+                    if *tab.get_unchecked(i).get_unchecked(y) != color {break d - 1;}
+                    if (i == 0) || (d == FOUR - 1) {break d;}
+		};
+		nb += res;
+            }
+            if nb >= FOUR - 1 {return true;}
+	}
+	
+	/* Diag 1 */
+	{
+            let mut nb = 0;
+            if (x > 0) && (y > 0) {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x - d;
+                    let j = y - d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+                    if (i == 0) || (j == 0) || (d == FOUR - 1) {break d;}
+		};
+		nb += res;
+            }
+            if (x < SIZEX - 1) && (y < SIZEY - 1) {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x + d;
+                    let j = y + d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+                    if (i == SIZEX - 1) || (j == SIZEY - 1) || (d == FOUR - 1) {break d;}
+		};
+		nb += res;
+            }
+            if nb >= FOUR - 1 {return true;}
+	}
+	
+	/* Diag 2 */
+	{
+            let mut nb = 0;
+            if (x > 0) && (y < SIZEY - 1) {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x - d;
+                    let j = y + d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+                    if (i == 0) || (j == SIZEY - 1) || (d == FOUR - 1) {break d;}
+		};
+		nb += res;
+            }
+            if (x < SIZEX - 1) && (y > 0) {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x + d;
+                    let j = y - d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+                    if (i == SIZEX - 1) || (j == 0) || (d == FOUR - 1) {break d;}
+		};
+		nb += res;
+            }
+            if nb >= FOUR - 1 {return true;}
+	}
+	false
     }
-    return (turn_hash, first_hash, hashesw, hashesb);
 }
+#[allow(dead_code)]
+fn eval3(x: usize, y: usize, color: Colors, tab: &Board) -> bool {
+    unsafe{
+	/* Vertical */
+	if y >= FOUR - 1 {
+            let mut d = 0;
+            loop {
+		d += 1;
+		let j = y - d;
+		if *tab.get_unchecked(x).get_unchecked(j) != color {break;}
+		if d == FOUR - 1 {return true;}
+		if j == 0 {break;}
+            };
+	}
+	
+	/* Horizontal */
+	{
+            let mut nb = 0;
+            if x < SIZEX - 1 {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x + d;
+                    if *tab.get_unchecked(i).get_unchecked(y) != color {break d - 1;}
+		    if d == FOUR - 1 {return true;}
+                    if i == SIZEX - 1 {break d;}
+		};
+		nb += res;
+            }
+            if x > 0 {
+		let mut d = 0;
+		loop {
+                    d += 1;
+                    let i = x - d;
+                    if *tab.get_unchecked(i).get_unchecked(y) != color {break;}
+		    if d + nb == FOUR - 1 {return true;}
+                    if i == 0 {break;}
+		};
+            }
+	}
+	
+	/* Diag 1 */
+	{
+            let mut nb = 0;
+            if (x > 0) && (y > 0) {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x - d;
+                    let j = y - d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+		    if d == FOUR - 1 {return true;}
+                    if (i == 0) || (j == 0) {break d;}
+		};
+		nb = res;
+            }
+            if (x < SIZEX - 1) && (y < SIZEY - 1) {
+		let mut d = 0;
+		loop {
+                    d += 1;
+                    let i = x + d;
+                    let j = y + d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break;}
+		    if d + nb == FOUR - 1 {return true;}
+                    if (i == SIZEX - 1) || (j == SIZEY - 1) {break;}
+		};
+	    }
+	}
+	
+	/* Diag 2 */
+	{
+            let mut nb = 0;
+            if (x > 0) && (y < SIZEY - 1) {
+		let mut d = 0;
+		let res = loop {
+                    d += 1;
+                    let i = x - d;
+                    let j = y + d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+                    if d == FOUR - 1 {return true;}
+		    if (i == 0) || (j == SIZEY - 1) {break d;}
+		};
+		nb = res;
+            }
+            if (x < SIZEX - 1) && (y > 0) {
+		let mut d = 0;
+		loop {
+                    d += 1;
+                    let i = x + d;
+                    let j = y - d;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break;}
+                    if d + nb == FOUR - 1 {return true;}
+		    if (i == SIZEX - 1) || (j == 0) {break;}
+		};
+            }
+	}
+	false
+    }
+}
+#[allow(dead_code)]
+fn eval(x: usize, y: usize, color: Colors, tab: &Board) -> bool {
+    unsafe{
+	/* Vertical */
+	if y >= FOUR - 1 {
+            let mut d = 0;
+	    let mut j = y;
+            loop {
+		d += 1;
+		j -= 1;
+		if *tab.get_unchecked(x).get_unchecked(j) != color {break;}
+		if d == FOUR - 1 {return true;}
+		if j == 0 {break;}
+            };
+	}
+	
+	/* Horizontal */
+	{
+            let mut nb = 0;
+            if x < SIZEX - 1 {
+		let mut d = 0;
+		let mut i = x;
+		nb = loop {
+                    d += 1;
+                    i += 1;
+                    if *tab.get_unchecked(i).get_unchecked(y) != color {break d - 1;}
+		    if d == FOUR - 1 {return true;}
+                    if i == SIZEX - 1 {break d;}
+		};
+            }
+            if x > 0 {
+		let mut d = 0;
+		let mut i = x;
+		loop {
+                    d += 1;
+                    i -= 1;
+                    if *tab.get_unchecked(i).get_unchecked(y) != color {break;}
+		    if d + nb == FOUR - 1 {return true;}
+                    if i == 0 {break;}
+		};
+            }
+	}
+	
+	/* Diag 1 */
+	{
+            let mut nb = 0;
+            if (x > 0) && (y > 0) {
+		let mut d = 0;
+		let mut i = x;
+		let mut j = y;
+		nb = loop {
+                    d += 1;
+                    i -= 1;
+                    j -= 1;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+		    if d == FOUR - 1 {return true;}
+                    if (i == 0) || (j == 0) {break d;}
+		};
+            }
+            if (x < SIZEX - 1) && (y < SIZEY - 1) {
+		let mut d = 0;
+		let mut i = x;
+		let mut j = y;
+		loop {
+                    d += 1;
+                    i += 1;
+                    j += 1;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break;}
+		    if d + nb == FOUR - 1 {return true;}
+                    if (i == SIZEX - 1) || (j == SIZEY - 1) {break;}
+		};
+	    }
+	}
+	
+	/* Diag 2 */
+	{
+            let mut nb = 0;
+            if (x > 0) && (y < SIZEY - 1) {
+		let mut d = 0;
+		let mut i = x;
+		let mut j = y;
+		nb = loop {
+                    d += 1;
+                    i -= 1;
+                    j += 1;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break d - 1;}
+                    if d == FOUR - 1 {return true;}
+		    if (i == 0) || (j == SIZEY - 1) {break d;}
+		};
+            }
+            if (x < SIZEX - 1) && (y > 0) {
+		let mut d = 0;
+		let mut i = x;
+		let mut j = y;
+		loop {
+                    d += 1;
+                    i += 1;
+                    j -= 1;
+                    if *tab.get_unchecked(i).get_unchecked(j) != color {break;}
+                    if d + nb == FOUR - 1 {return true;}
+		    if (i == SIZEX - 1) || (j == 0) {break;}
+		};
+            }
+	}
+	false
+    }
+}
+
+use lazy_static::lazy_static;
+use rand::{thread_rng, Rng};
+lazy_static! {
+    static ref HW:[[Sigs;SIZEY];SIZEX] = {
+	let mut rng = thread_rng();
+	let mut t = [[0; SIZEY]; SIZEX];
+	for item in t.iter_mut() {
+	    for item2 in item.iter_mut() {
+		*item2 = rng.gen();
+	    }
+	}
+	t
+    };
+    static ref HB:[[Sigs;SIZEY];SIZEX] = {
+	let mut rng = thread_rng();
+	let mut t = [[0; SIZEY]; SIZEX];
+	for item in t.iter_mut() {
+	    for item2 in item.iter_mut() {
+		*item2 = rng.gen();
+	    }
+	}
+	t
+    };
+    static ref FH:Sigs = {
+	let mut rng = thread_rng();
+	rng.gen()
+    };
+    static ref IND:[usize;SIZEX]= {
+	let mut t = [0;SIZEX];
+	for (ix,item) in t.iter_mut().enumerate() {
+	    *item=(SIZEX - 1) / 2 + (ix + 1) / 2 * (2 * (ix % 2)) - (ix + 1) / 2;
+	}
+	t
+    };
+}
+
+
 
 fn retrieve(hv: Sigs, hashes: &HTable) -> Option<(Vals, Vals)> {
     let ind = (hv & HASH_MASK) as usize;
     if hashes[ind].sig == hv {
-        return Some((hashes[ind].v_inf, hashes[ind].v_sup));
+        Some((hashes[ind].v_inf, hashes[ind].v_sup))
     } else {
-        return None;
-    };
+        None
+    }
 }
 
 use core::cmp::{max, min};
@@ -306,72 +554,53 @@ fn ab(
     depth: Depth,
     tab: &mut Board,
     first: &mut [usize; SIZEX],
-    nodes: &mut u64,
     hv: Sigs,
     hv2: Sigs,
-    turn_hash: Sigs,
-    first_hash: Sigs,
-    hashesw: HVals,
-    hashesb: HVals,
     hashes: &mut HTable,
 ) -> Vals {
-    *nodes = *nodes + 1;
 
     //   if hv != compute_hash(color,tab,first_hash,turn_hash,hashesw,hashesb) {panic!("Bad hash");}
 
     let mut a = alpha;
     let mut b = beta;
 
-    match retrieve(min(hv, hv2), hashes) {
-        Some((v_inf, v_sup)) => {
-            if v_inf == v_sup {
-                return v_inf;
-            }
-            if v_inf >= b {
-                return v_inf;
-            }
-            if v_sup <= a {
-                return v_sup;
-            }
-            a = max(a, v_inf);
-            b = min(b, v_sup);
+    if let Some((v_inf,v_sup)) = retrieve(min(hv, hv2), hashes) {
+        if v_inf == v_sup {
+            return v_inf;
         }
-        None => {}
-    }
-
-    for x in 0..SIZEX {
-        let y = first[x];
-        if y != SIZEY {
-            let v = eval2(x, y, color, tab);
-            if v != 0 {
-                return v;
-            }
+        if v_inf >= b {
+            return v_inf;
         }
-    }
-    if depth == MAXDEPTH {
-        return 0;
-    }
-    let mut g;
-    if color == WHITE {
-        g = Vals::MIN;
-    } else {
-        g = Vals::MAX;
+        if v_sup <= a {
+            return v_sup;
+        }
+        a = max(a, v_inf);
+        b = min(b, v_sup);
     }
 
     for ix in 0..SIZEX {
-        let x = (SIZEX - 1) / 2 + (ix + 1) / 2 * (2 * (ix % 2)) - (ix + 1) / 2;
+	let x = IND[ix];
+        let y = first[x];
+        if (y != SIZEY) && eval(x, y, color, tab) {return color;}
+    }
+    if depth == MAXDEPTH {return 0;}
+    let mut g= if color == WHITE {Vals::MIN} else {Vals::MAX};
+    for ix in 0..SIZEX {
+	if a >= b {break;}
+	//        let x = (SIZEX - 1) / 2 + (ix + 1) / 2 * (2 * (ix % 2)) - (ix + 1) / 2;
+	let x = IND[ix];
         let y = first[x];
         if y < SIZEY {
             tab[x][y] = color;
-            first[x] = first[x] + 1;
+            first[x] += 1;
             let nhv;
             let nhv2;
             if color == WHITE {
-                nhv = hv ^ hashesw[x][y];
-                nhv2 = hv2 ^ hashesw[SIZEX - 1 - x][y];
+                nhv = hv ^ HW[x][y];
+                nhv2 = hv2 ^ HW[SIZEX - 1 - x][y];
             } else {
-                nhv = hv ^ hashesb[x][y];
-                nhv2 = hv2 ^ hashesb[SIZEX - 1 - x][y];
+                nhv = hv ^ HB[x][y];
+                nhv2 = hv2 ^ HB[SIZEX - 1 - x][y];
             }
             let v = ab(
                 a,
@@ -380,83 +609,56 @@ fn ab(
                 depth + 1,
                 tab,
                 first,
-                nodes,
-		// turn_hash is useless in connect4
-                nhv ^ turn_hash,nhv2 ^ turn_hash,
-//                nhv,nhv2,
-                turn_hash,
-                first_hash,
-                hashesw,
-                hashesb,
+                nhv,
+		nhv2,
                 hashes,
             );
-            first[x] = first[x] - 1;
+            first[x] -= 1;
             tab[x][y] = EMPTY;
             if color == WHITE {
-                if v > g {
-                    g = v;
-                    if g > a {
-                        a = g;
-                        if a >= b {
-                            break;
-                        }
-                    }
-                }
+		g=max(v,g);
+		a=max(a,g);
             } else {
-                if v < g {
-                    g = v;
-                    if g < b {
-                        b = g;
-                        if a >= b {
-                            break;
-                        }
-                    }
-                }
-            }
+		g=min(v,g);
+		b=min(b,g);
+	    }
         }
     }
     store(min(hv, hv2), alpha, beta, g, depth, hashes);
-    return g;
+    g
 }
 
-fn compute_hash(
-    color: Colors,
-    tab: &mut Board,
-    first_hash: Sigs,
-    turn_hash: Sigs,
-    hashesw: HVals,
-    hashesb: HVals,
-) -> Sigs {
-    let mut h = first_hash;
-    if color == BLACK {
-        h = h ^ turn_hash;
-    }
+fn compute_hash(tab: &mut Board) -> Sigs {
+    let mut h = *FH;
+//    if color == BLACK {
+//        h ^= turn_hash;
+//    }
     for i in 0..SIZEX {
         for j in 0..SIZEY {
             match tab[i][j] {
                 BLACK => {
-                    h = h ^ hashesb[i][j];
+                    h ^= HB[i][j];
                 }
                 WHITE => {
-                    h = h ^ hashesw[i][j];
+                    h ^= HW[i][j];
                 }
                 _ => {}
             }
         }
     }
-    return h;
+    h
 }
 
 fn main() {
     use std::time::{Instant, SystemTime};
     let mut tab = [[EMPTY; SIZEY]; SIZEX];
     let mut first = [0; SIZEX];
-    let mut nodes = 0;
-    let mut hashes = Box::new([ZHASH; HASH_SIZE]);
+    let mut hashes = vec![ZHASH; HASH_SIZE];
+//    let mut hashes = h1.into_boxed_slice();
+//    let mut hashes = Box::new([ZHASH; HASH_SIZE]);
 
-    let (turn_hash, first_hash, hashesw, hashesb) = build_hashes();
-    let hv = compute_hash(WHITE, &mut tab, first_hash, turn_hash, hashesw, hashesb);
-    let hv2 = first_hash;
+    let hv = compute_hash(&mut tab);
+    let hv2 = *FH;
     if hv != hv2 {
         panic!("Why???");
     };
@@ -469,17 +671,11 @@ fn main() {
         0,
         &mut tab,
         &mut first,
-        &mut nodes,
         hv,
         hv2,
-        turn_hash,
-        first_hash,
-        hashesw,
-        hashesb,
         &mut hashes,
     );
     println!("wall_clock={:?}", now.elapsed());
     println!("system_clock={:?}", snow.elapsed().unwrap());
     println!("ret={}", ret);
-    println!("nodes={}", nodes);
 }
