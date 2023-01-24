@@ -14,36 +14,36 @@ Results and timings are presented below.
 
 
 | X | Y |Result|Time (in seconds)|NB_BITS|
-|---|---|------|----||
-|2 |4 | Draw | <1s||
-|2 |5 | Draw | <1s||
-|2 |6 | Draw | <1s||
-|2 |7 | Draw | <1s||
-|3 |4 | Draw | <1s||
-|3 |5 | Draw | <1s||
-|3 |6 | Draw | <1s||
-|3 |7 | Draw | <1s||
-|4 |2 | Draw | <1s||
-|4 |3 | Draw | <1s||
-|4 |4 | Draw | <1s||
-|4 |5 | Draw | <1s||
-|4 |6 | Draw | <1s||
-|4 |7 | Draw | <1s||
-|5 |2 | Draw | <1s||
-|5 |3 | Draw | <1s||
-|5 |4 | Draw | <1s||
-|5 |5 | Draw | <1s||
-|5 |6 | Draw | <1s||
+|---|---|------|----|--- |
+|2 |4 | Draw | <1s| |
+|2 |5 | Draw | <1s| |
+|2 |6 | Draw | <1s| |
+|2 |7 | Draw | <1s| |
+|3 |4 | Draw | <1s| |
+|3 |5 | Draw | <1s| |
+|3 |6 | Draw | <1s| |
+|3 |7 | Draw | <1s| |
+|4 |2 | Draw | <1s| |
+|4 |3 | Draw | <1s| |
+|4 |4 | Draw | <1s| |
+|4 |5 | Draw | <1s| |
+|4 |6 | Draw | <1s| |
+|4 |7 | Draw | <1s| |
+|5 |2 | Draw | <1s| |
+|5 |3 | Draw | <1s| |
+|5 |4 | Draw | <1s| |
+|5 |5 | Draw | <1s| |
+|5 |6 | Draw | <1s| |
 |5 |7 | Draw | 4.675093529 |28|
-|6 |2 | Draw | <1s||
-|6 |3 | Draw | <1s||
-|6 |4 | Black | <1s||
-|6 |5 | Draw | <1s||
+|6 |2 | Draw | <1s| |
+|6 |3 | Draw | <1s| |
+|6 |4 | Black | <1s| |
+|6 |5 | Draw | <1s| |
 |6 |6 | Black | 23.976995134 |28|
 |6 |7 | White | 195.763339926 |30|
-|7 |2 | Draw | <1s||
-|7 |3 | Draw | <1s||
-|7 |4 | Draw | <1s ||
+|7 |2 | Draw | <1s| |
+|7 |3 | Draw | <1s| |
+|7 |4 | Draw | <1s | |
 |7 |5 | Draw | 8.398944051 |28|
 |7 |6 | White |428.865146357 |32|
-|7 |7 | Draw |  ||
+|7 |7 | Draw |  | |
