@@ -3,7 +3,7 @@ type Depth = u8;
 type Colors = i8;
 type Sigs = u64;
 
-const SIZEX: usize = 6;
+const SIZEX: usize = 5;
 const SIZEY: usize = 7;
 
 const FOUR: usize = 4;
@@ -17,7 +17,7 @@ const BLACK: Colors = -WHITE;
 //type HVals = [[Sigs; SIZEY]; SIZEX];
 type Board = [[Colors; SIZEY]; SIZEX];
 
-const NB_BITS: u8 = 30;
+const NB_BITS: u8 = 28;
 const HASH_SIZE: usize = 1 << NB_BITS;
 const HASH_MASK: Sigs = (1 << NB_BITS) - 1;
 #[repr(packed)]
