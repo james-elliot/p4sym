@@ -45,4 +45,4 @@ Results and timings are presented below.
 |7 |4 | Draw | <1s | |
 |7 |5 | Draw | 8s |28|
 |7 |6 | White |429s |32|
-|7 |7 | Draw |  | |
+|7 |7 | Draw | 6350s |32 |
