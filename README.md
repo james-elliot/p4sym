@@ -4,7 +4,7 @@ This program is quite "state of the art" regarding the use of symmetries
 and hash tables. 
 
 It can solve the connect-4 game up to 7x7 given enough memory for the hash tables.
-This Rust version is not as fast as the C version I wrote for my students at ISAE/Sup aéro. However, the difference in this version is less than 15% when using a bit of unsafe code in the evaluation function (the 7x6 version in C with the same size for hashtables compiled with clang12 runs in 378s). In fact, the difference seems to come mainly from bounds checking that can not be turned off in Rust, except when using ```get_unchecked()``` which is unsafe.
+This Rust version is not as fast as the C version I wrote for my students at ISAE/Sup aéro. However, the difference in this version is less than 15% when using a bit of unsafe code in the evaluation function (the 7x6 version in C with the same size for hashtables compiled with clang12 runs in 378s, and the 7x7 runs in 5285s). In fact, the difference seems to come mainly from bounds checking that can not be turned off in Rust, except when using ```get_unchecked()``` which is unsafe.
 
 Parallelism is not used in the main branch. Working on it in the parallel branch.
 
