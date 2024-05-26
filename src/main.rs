@@ -3,8 +3,10 @@ use derive_more::{Add,Sub,BitAnd,BitXor,BitXorAssign,From,Into,Display,Neg};
 //type Vals = i8;
 #[derive(Clone,Copy,Debug,Add,From,Into,PartialEq,PartialOrd,Ord,Eq,Display)]
 struct Vals(i8);
-const VALS_MIN:Vals = Vals(i8::MIN);
-const VALS_MAX:Vals = Vals(i8::MAX);
+impl Vals {
+    const MIN: Vals = Vals(i8::MIN);
+    const MAX: Vals = Vals(i8::MAX);
+}
 
 //type Depth = u8;
 #[derive(Clone,Copy,Debug,Add,Sub,From,Into,PartialEq,PartialOrd,Ord,Eq,Display)]
@@ -551,8 +553,8 @@ fn store(hv: Sigs, alpha: Vals, beta: Vals, g: Vals, depth: Depth, hashes: &mut 
 	let s = hashes[ind].sig;
         if s != hv {
             hashes[ind].d = d;
-            hashes[ind].v_inf = VALS_MIN;
-            hashes[ind].v_sup = VALS_MAX;
+            hashes[ind].v_inf = Vals::MIN;
+            hashes[ind].v_sup = Vals::MAX;
             hashes[ind].sig = hv;
         }
         if (g > alpha) && (g < beta) {
@@ -603,7 +605,7 @@ fn ab(
         if (y != SIZEY) && eval(x, y, color, tab) {return Vals(color.into());}
     }
     if depth == MAXDEPTH {return Vals(0);}
-    let mut g= if color == WHITE {VALS_MIN} else {VALS_MAX};
+    let mut g= if color == WHITE {Vals::MIN} else {Vals::MAX};
     for ix in 0..SIZEX {
 	if a >= b {break;}
 	//        let x = (SIZEX - 1) / 2 + (ix + 1) / 2 * (2 * (ix % 2)) - (ix + 1) / 2;
@@ -684,8 +686,8 @@ fn main() {
     let now = Instant::now();
     let snow = SystemTime::now();
     let ret = ab(
-        VALS_MIN,
-        VALS_MAX,
+        Vals::MIN,
+        Vals::MAX,
         WHITE,
         Depth(0),
         &mut tab,
