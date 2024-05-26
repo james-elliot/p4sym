@@ -1,23 +1,33 @@
-use derive_more::{BitAnd,BitXor,BitXorAssign,From,Into};
+use derive_more::{Add,Sub,BitAnd,BitXor,BitXorAssign,From,Into,Display,Neg};
 
-type Vals = i8;
-type Depth = u8;
-type Colors = i8;
+//type Vals = i8;
+#[derive(Clone,Copy,Debug,Add,From,Into,PartialEq,PartialOrd,Ord,Eq,Display)]
+struct Vals(i8);
+const VALS_MIN:Vals = Vals(i8::MIN);
+const VALS_MAX:Vals = Vals(i8::MAX);
+
+//type Depth = u8;
+#[derive(Clone,Copy,Debug,Add,Sub,From,Into,PartialEq,PartialOrd,Ord,Eq,Display)]
+struct Depth(u8);
+
+//type Colors = i8;
+#[derive(Clone,Copy,Debug,From,Into,PartialEq,PartialOrd,Ord,Eq,Display,Neg)]
+struct Colors(i8);
+const EMPTY: Colors = Colors(0);
+const WHITE: Colors = Colors(1);
+const BLACK: Colors = Colors(-1);
+
 //type Sigs = u64;
-
 #[derive(Clone,Copy,Debug,BitXor,BitXorAssign,BitAnd,From,Into,PartialEq,PartialOrd,Ord,Eq)]
 struct Sigs(u64);
 
 const SIZEX: usize = 6;
 const SIZEY: usize = 6;
+const MAXDEPTH: Depth = Depth((SIZEX * SIZEY - 1) as u8);
 
 const FOUR: usize = 4;
 
-const MAXDEPTH: Depth = (SIZEX * SIZEY - 1) as Depth;
 
-const EMPTY: Colors = 0;
-const WHITE: Colors = 1;
-const BLACK: Colors = -WHITE;
 
 //type HVals = [[Sigs; SIZEY]; SIZEX];
 type Board = [[Colors; SIZEY]; SIZEX];
@@ -35,9 +45,9 @@ struct HashElem {
 }
 const ZHASH: HashElem = HashElem {
     sig: Sigs(0),
-    v_inf: 0,
-    v_sup: 0,
-    d: 0,
+    v_inf: Vals(0),
+    v_sup: Vals(0),
+    d: Depth(0),
 };
 //type HTable2 = Box<[HashElem; HASH_SIZE]>;
 type HTable = Vec<HashElem>;
@@ -536,13 +546,13 @@ use core::cmp::{max, min};
 fn store(hv: Sigs, alpha: Vals, beta: Vals, g: Vals, depth: Depth, hashes: &mut HTable) {
     let ind = u64::from(hv & HASH_MASK) as usize;
 //    let ind = (hv & HASH_MASK) as usize;
-    let d = MAXDEPTH + 2 - depth;
+    let d = MAXDEPTH + Depth(2) - depth;
     if hashes[ind].d <= d {
 	let s = hashes[ind].sig;
         if s != hv {
             hashes[ind].d = d;
-            hashes[ind].v_inf = Vals::MIN;
-            hashes[ind].v_sup = Vals::MAX;
+            hashes[ind].v_inf = VALS_MIN;
+            hashes[ind].v_sup = VALS_MAX;
             hashes[ind].sig = hv;
         }
         if (g > alpha) && (g < beta) {
@@ -590,10 +600,10 @@ fn ab(
     for ix in 0..SIZEX {
 	let x = IND[ix];
         let y = first[x];
-        if (y != SIZEY) && eval(x, y, color, tab) {return color;}
+        if (y != SIZEY) && eval(x, y, color, tab) {return Vals(color.into());}
     }
-    if depth == MAXDEPTH {return 0;}
-    let mut g= if color == WHITE {Vals::MIN} else {Vals::MAX};
+    if depth == MAXDEPTH {return Vals(0);}
+    let mut g= if color == WHITE {VALS_MIN} else {VALS_MAX};
     for ix in 0..SIZEX {
 	if a >= b {break;}
 	//        let x = (SIZEX - 1) / 2 + (ix + 1) / 2 * (2 * (ix % 2)) - (ix + 1) / 2;
@@ -615,7 +625,7 @@ fn ab(
                 a,
                 b,
                 -color,
-                depth + 1,
+                depth + Depth(1),
                 tab,
                 first,
                 nhv,
@@ -674,10 +684,10 @@ fn main() {
     let now = Instant::now();
     let snow = SystemTime::now();
     let ret = ab(
-        Vals::MIN,
-        Vals::MAX,
+        VALS_MIN,
+        VALS_MAX,
         WHITE,
-        0,
+        Depth(0),
         &mut tab,
         &mut first,
         hv,
