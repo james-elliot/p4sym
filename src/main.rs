@@ -1,10 +1,15 @@
+use derive_more::{BitAnd,BitXor,BitXorAssign,From,Into};
+
 type Vals = i8;
 type Depth = u8;
 type Colors = i8;
-type Sigs = u64;
+//type Sigs = u64;
 
-const SIZEX: usize = 7;
-const SIZEY: usize = 7;
+#[derive(Clone,Copy,Debug,BitXor,BitXorAssign,BitAnd,From,Into,PartialEq,PartialOrd,Ord,Eq)]
+struct Sigs(u64);
+
+const SIZEX: usize = 6;
+const SIZEY: usize = 6;
 
 const FOUR: usize = 4;
 
@@ -17,9 +22,9 @@ const BLACK: Colors = -WHITE;
 //type HVals = [[Sigs; SIZEY]; SIZEX];
 type Board = [[Colors; SIZEY]; SIZEX];
 
-const NB_BITS: u8 = 32;
+const NB_BITS: u8 = 28;
 const HASH_SIZE: usize = 1 << NB_BITS;
-const HASH_MASK: Sigs = (1 << NB_BITS) - 1;
+const HASH_MASK: Sigs = Sigs((1 << NB_BITS) - 1);
 #[repr(packed)]
 #[derive(Clone, Copy, Debug)]
 struct HashElem {
@@ -29,7 +34,7 @@ struct HashElem {
     d: Depth,
 }
 const ZHASH: HashElem = HashElem {
-    sig: 0,
+    sig: Sigs(0),
     v_inf: 0,
     v_sup: 0,
     d: 0,
@@ -482,27 +487,27 @@ use rand::{thread_rng, Rng};
 lazy_static! {
     static ref HW:[[Sigs;SIZEY];SIZEX] = {
 	let mut rng = thread_rng();
-	let mut t = [[0; SIZEY]; SIZEX];
+	let mut t = [[Sigs(0); SIZEY]; SIZEX];
 	for item in t.iter_mut() {
 	    for item2 in item.iter_mut() {
-		*item2 = rng.gen();
+		*item2 = Sigs(rng.gen());
 	    }
 	}
 	t
     };
     static ref HB:[[Sigs;SIZEY];SIZEX] = {
 	let mut rng = thread_rng();
-	let mut t = [[0; SIZEY]; SIZEX];
+	let mut t = [[Sigs(0); SIZEY]; SIZEX];
 	for item in t.iter_mut() {
 	    for item2 in item.iter_mut() {
-		*item2 = rng.gen();
+		*item2 = Sigs(rng.gen());
 	    }
 	}
 	t
     };
     static ref FH:Sigs = {
 	let mut rng = thread_rng();
-	rng.gen()
+	Sigs(rng.gen())
     };
     static ref IND:[usize;SIZEX]= {
 	let mut t = [0;SIZEX];
@@ -516,8 +521,10 @@ lazy_static! {
 
 
 fn retrieve(hv: Sigs, hashes: &HTable) -> Option<(Vals, Vals)> {
-    let ind = (hv & HASH_MASK) as usize;
-    if hashes[ind].sig == hv {
+    let ind = u64::from(hv & HASH_MASK) as usize;
+    //    let ind = (hv & HASH_MASK) as usize;
+    let s = hashes[ind].sig;
+    if s == hv {
         Some((hashes[ind].v_inf, hashes[ind].v_sup))
     } else {
         None
@@ -527,10 +534,12 @@ fn retrieve(hv: Sigs, hashes: &HTable) -> Option<(Vals, Vals)> {
 use core::cmp::{max, min};
 
 fn store(hv: Sigs, alpha: Vals, beta: Vals, g: Vals, depth: Depth, hashes: &mut HTable) {
-    let ind = (hv & HASH_MASK) as usize;
+    let ind = u64::from(hv & HASH_MASK) as usize;
+//    let ind = (hv & HASH_MASK) as usize;
     let d = MAXDEPTH + 2 - depth;
     if hashes[ind].d <= d {
-        if hashes[ind].sig != hv {
+	let s = hashes[ind].sig;
+        if s != hv {
             hashes[ind].d = d;
             hashes[ind].v_inf = Vals::MIN;
             hashes[ind].v_sup = Vals::MAX;
