@@ -548,7 +548,7 @@ use core::cmp::{max, min};
 fn store(hv: Sigs, alpha: Vals, beta: Vals, g: Vals, depth: Depth, hashes: &mut HTable) {
     let ind = u64::from(hv & HASH_MASK) as usize;
 //    let ind = (hv & HASH_MASK) as usize;
-    let d = MAXDEPTH + Depth(2) - depth;
+    let d = MAXDEPTH + 2.into() - depth;
     if hashes[ind].d <= d {
 	let s = hashes[ind].sig;
         if s != hv {
@@ -627,7 +627,7 @@ fn ab(
                 a,
                 b,
                 -color,
-                depth + Depth(1),
+                depth + 1.into(),
                 tab,
                 first,
                 nhv,
